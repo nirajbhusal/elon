@@ -1,8 +1,14 @@
+const fs = require("fs");
+const path = require("path");
 const site = require("./src/_data/site");
 const { markdown, comingUpFromFile } = require("./lib/content");
 const { isoDate, longDate, shortDate, rfc822 } = require("./lib/dates");
 
 module.exports = function (eleventyConfig) {
+  eleventyConfig.on("eleventy.before", () => {
+    fs.rmSync(path.join(__dirname, "_site"), { recursive: true, force: true });
+  });
+
   eleventyConfig.setLibrary("md", markdown);
   eleventyConfig.setTemplateFormats(["md", "njk", "11ty.js"]);
 
