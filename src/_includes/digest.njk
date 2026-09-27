@@ -8,8 +8,10 @@ layout: base.njk
     {% if covers %}<p class="covers">{{ covers }}</p>{% endif %}
     {% if summary %}<p class="lede">{{ summary }}</p>{% endif %}
   </header>
+  {% set upcoming = page.inputPath | comingUp %}
+  {% include "coming.njk" %}
   <div class="prose">
-    {{ content | safe }}
+    {{ content | pageBody | safe }}
   </div>
 </article>
 {% set nav = collections.digests | digestNav(page.url) %}

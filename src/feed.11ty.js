@@ -1,7 +1,9 @@
 const site = require("./_data/site");
-const { readBody, renderMarkdown, xmlEscape, cdata } = require("../lib/content");
-const { rfc822 } = require("../lib/dates");
+const { readBody, renderMarkdown, xmlEscape } = require("../lib/content");
+const { atomDate } = require("../lib/dates");
 const { absoluteUrl } = require("../lib/urls");
+
+const FEED_LIMIT = 30;
 
 class Feed {
   data() {
@@ -14,38 +16,38 @@ class Feed {
   render(data) {
     const home = absoluteUrl("/");
     const self = absoluteUrl("/feed.xml");
-    const digests = data.collections.digests || [];
-    const lastBuild = digests.length ? `<lastBuildDate>${rfc822(digests[0].date)}</lastBuildDate>` : "";
+    const digests = (data.collections.digests || []).slice(0, FEED_LIMIT);
+    const updated = digests.length ? atomDate(digests[0].date) : new Date().toISOString();
 
-    const items = digests
+    const entries = digests
       .map((item) => {
         const link = absoluteUrl(item.url);
         const html = renderMarkdown(readBody(item.inputPath));
-        const description = `${item.data.covers} — ${item.data.summary}`.trim();
-        return `    <item>
-      <title>${xmlEscape(item.data.title)}</title>
-      <link>${xmlEscape(link)}</link>
-      <guid isPermaLink="true">${xmlEscape(link)}</guid>
-      <pubDate>${rfc822(item.date)}</pubDate>
-      <description>${xmlEscape(description)}</description>
-      <content:encoded>${cdata(html)}</content:encoded>
-    </item>`;
+        const summary = `${item.data.covers} — ${item.data.summary}`.trim();
+        const when = atomDate(item.date);
+        return `  <entry>
+    <title>${xmlEscape(item.data.title)}</title>
+    <link href="${xmlEscape(link)}" rel="alternate" type="text/html"/>
+    <id>${xmlEscape(link)}</id>
+    <published>${when}</published>
+    <updated>${when}</updated>
+    <summary>${xmlEscape(summary)}</summary>
+    <content type="html">${xmlEscape(html)}</content>
+  </entry>`;
       })
       .join("\n");
 
-    return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
-  <channel>
-    <title>${xmlEscape(site.title)}</title>
-    <link>${xmlEscape(home)}</link>
-    <atom:link href="${xmlEscape(self)}" rel="self" type="application/rss+xml"/>
-    <description>${xmlEscape(site.description)}</description>
-    <language>${xmlEscape(site.language)}</language>
-    <generator>Eleventy</generator>
-    ${lastBuild}
-${items}
-  </channel>
-</rss>
+    return `<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>${xmlEscape(site.title)}</title>
+  <subtitle>${xmlEscape(site.description)}</subtitle>
+  <link href="${xmlEscape(home)}" rel="alternate" type="text/html"/>
+  <link href="${xmlEscape(self)}" rel="self" type="application/atom+xml"/>
+  <id>${xmlEscape(home)}</id>
+  <updated>${updated}</updated>
+  <author><name>${xmlEscape(site.author)}</name></author>
+${entries}
+</feed>
 `;
   }
 }
