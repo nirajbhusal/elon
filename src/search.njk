@@ -1,0 +1,26 @@
+---
+layout: base.njk
+permalink: /search/
+title: Search
+description: Search every daily digest of Elon Musk.
+needsSearch: true
+---
+<h1>Search</h1>
+<p class="lede">Look through posts, replies, interviews, travel, and company news.</p>
+<form id="search-form" class="search-form" action="{{ '/search/' | url }}" method="get" role="search" data-index="{{ '/search-index.json' | url }}">
+  <label class="visually-hidden" for="q">Search digests</label>
+  <input id="q" name="q" type="search" placeholder="Posts, people, companies, rockets…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" autofocus>
+</form>
+<p id="search-status" class="search-status" aria-live="polite"></p>
+<div id="search-results"></div>
+<noscript>
+  <p class="empty">Search needs JavaScript. Every digest is listed below.</p>
+  {% if collections.digests.length %}
+  <ol class="archive-list">
+    {% for item in collections.digests %}
+      {% set heading = "h2" %}
+      {% include "archive-item.njk" %}
+    {% endfor %}
+  </ol>
+  {% endif %}
+</noscript>

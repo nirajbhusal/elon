@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="{{ site.language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem("elon-theme");
+        if (theme === "light" || theme === "dark") {
+          document.documentElement.setAttribute("data-theme", theme);
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <title>{% if isHome %}Elon · A daily digest of Elon Musk{% elif title %}{{ title }} · Elon{% else %}Elon{% endif %}</title>
+  {% if summary %}
+  <meta name="description" content="{{ summary }}">
+  {% elif description %}
+  <meta name="description" content="{{ description }}">
+  {% elif isHome and collections.digests.length %}
+  <meta name="description" content="{{ collections.digests[0].data.summary }}">
+  {% else %}
+  <meta name="description" content="{{ site.description }}">
+  {% endif %}
+  {% if noindex %}<meta name="robots" content="noindex">{% endif %}
+  <link rel="canonical" href="{{ site.url }}{{ page.url | url }}">
+  <link rel="alternate" type="application/rss+xml" title="Elon" href="{{ site.url }}{{ '/feed.xml' | url }}">
+  <link rel="icon" href="{{ '/favicon.svg' | url }}" type="image/svg+xml">
+  <meta name="theme-color" content="#f3efe6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#12110e" media="(prefers-color-scheme: dark)">
+  <meta property="og:site_name" content="Elon">
+  <meta property="og:title" content="{% if isHome %}Elon{% elif title %}{{ title }}{% else %}Elon{% endif %}">
+  {% if summary %}
+  <meta property="og:description" content="{{ summary }}">
+  {% elif description %}
+  <meta property="og:description" content="{{ description }}">
+  {% elif isHome and collections.digests.length %}
+  <meta property="og:description" content="{{ collections.digests[0].data.summary }}">
+  {% else %}
+  <meta property="og:description" content="{{ site.description }}">
+  {% endif %}
+  <meta property="og:url" content="{{ site.url }}{{ page.url | url }}">
+  {% if ogType == "article" %}
+  <meta property="og:type" content="article">
+  <meta property="article:published_time" content="{{ page.date | isoDate }}">
+  {% else %}
+  <meta property="og:type" content="website">
+  {% endif %}
+  <link rel="stylesheet" href="{{ '/css/site.css' | url }}">
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="masthead">
+    <p class="eyebrow">Nepal Time · UTC+5:45</p>
+    <a class="wordmark" href="{{ '/' | url }}">Elon</a>
+    <p class="tagline">A daily digest of Elon Musk</p>
+    <nav class="nav" aria-label="Site">
+      <a href="{{ '/search/' | url }}">Search</a>
+      <a href="{{ '/feed.xml' | url }}">RSS</a>
+      <button type="button" class="text-button" data-theme-toggle>Dark mode</button>
+    </nav>
+  </header>
+  <main id="content" class="wrap" tabindex="-1">
+    {{ content | safe }}
+  </main>
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>A personal digest compiled by Niraj Bhusal from public sources. Times are Nepal Time (NPT, UTC+5:45).</p>
+    </div>
+  </footer>
+  <script>
+    (function () {
+      var key = "elon-theme";
+      var root = document.documentElement;
+      var button = document.querySelector("[data-theme-toggle]");
+      if (!button) return;
+
+      function stored() {
+        try { return localStorage.getItem(key); } catch (e) { return null; }
+      }
+
+      function effective() {
+        var theme = root.getAttribute("data-theme");
+        if (theme === "light" || theme === "dark") return theme;
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+
+      function label(theme) {
+        button.textContent = theme === "dark" ? "Light mode" : "Dark mode";
+        button.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+      }
+
+      label(effective());
+
+      button.addEventListener("click", function () {
+        var next = effective() === "dark" ? "light" : "dark";
+        root.setAttribute("data-theme", next);
+        try { localStorage.setItem(key, next); } catch (e) {}
+        label(next);
+      });
+
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () {
+        var choice = stored();
+        if (choice === "light" || choice === "dark") return;
+        root.removeAttribute("data-theme");
+        label(effective());
+      });
+    })();
+  </script>
+  {% if needsSearch %}
+  <script src="{{ '/js/search.js' | url }}" defer></script>
+  {% endif %}
+</body>
+</html>

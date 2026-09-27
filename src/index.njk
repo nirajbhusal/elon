@@ -1,0 +1,55 @@
+---
+layout: base.njk
+permalink: /
+isHome: true
+---
+{% if collections.digests.length == 0 %}
+<h1>No digests yet</h1>
+<p class="lede">The first digest will appear here.</p>
+{% else %}
+{% set latest = collections.digests[0] %}
+<article class="digest">
+  <header class="digest-head">
+    <p class="kicker">
+      <a href="{{ latest.url | url }}">
+        <span class="kicker-label">Latest</span>
+        <time datetime="{{ latest.date | isoDate }}">{{ latest.date | digestDate }}</time>
+      </a>
+    </p>
+    <h1><a href="{{ latest.url | url }}">{{ latest.data.title }}</a></h1>
+    {% if latest.data.covers %}<p class="covers">{{ latest.data.covers }}</p>{% endif %}
+    {% if latest.data.summary %}<p class="lede">{{ latest.data.summary }}</p>{% endif %}
+  </header>
+  {% set upcoming = latest.inputPath | comingUp %}
+  {% if upcoming.length %}
+  <aside class="coming" aria-labelledby="coming-title">
+    <h2 id="coming-title">Coming up</h2>
+    <ul>
+      {% for bit in upcoming %}
+      <li>{{ bit | safe }}</li>
+      {% endfor %}
+    </ul>
+  </aside>
+  {% endif %}
+  <div class="prose">
+    {{ latest.templateContent | safe }}
+  </div>
+  <p class="permalink"><a href="{{ latest.url | url }}">Open the {{ latest.date | digestDateShort }} digest</a></p>
+</article>
+{% endif %}
+
+<section class="archive" aria-labelledby="earlier-title">
+  <h2 id="earlier-title">Earlier digests</h2>
+  {% if collections.digests.length > 1 %}
+  <ol class="archive-list">
+    {% for item in collections.digests %}
+      {% if not loop.first %}
+        {% set heading = "h3" %}
+        {% include "archive-item.njk" %}
+      {% endif %}
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="empty">No earlier digests yet.</p>
+  {% endif %}
+</section>

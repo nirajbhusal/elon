@@ -1,0 +1,37 @@
+---
+layout: base.njk
+---
+<article class="digest">
+  <header class="digest-head">
+    <p class="kicker"><time datetime="{{ page.date | isoDate }}">{{ page.date | digestDate }}</time></p>
+    <h1>{{ title }}</h1>
+    {% if covers %}<p class="covers">{{ covers }}</p>{% endif %}
+    {% if summary %}<p class="lede">{{ summary }}</p>{% endif %}
+  </header>
+  <div class="prose">
+    {{ content | safe }}
+  </div>
+</article>
+{% set nav = collections.digests | digestNav(page.url) %}
+{% if nav.older or nav.newer %}
+<nav class="pager" aria-label="Previous and next digests">
+  <div class="pager-slot">
+    {% if nav.older %}
+    <a href="{{ nav.older.url | url }}">
+      <span class="pager-kicker">Previous</span>
+      <span class="pager-title">{{ nav.older.data.title }}</span>
+      <time datetime="{{ nav.older.date | isoDate }}">{{ nav.older.date | digestDateShort }}</time>
+    </a>
+    {% endif %}
+  </div>
+  <div class="pager-slot next">
+    {% if nav.newer %}
+    <a href="{{ nav.newer.url | url }}">
+      <span class="pager-kicker">Next</span>
+      <span class="pager-title">{{ nav.newer.data.title }}</span>
+      <time datetime="{{ nav.newer.date | isoDate }}">{{ nav.newer.date | digestDateShort }}</time>
+    </a>
+    {% endif %}
+  </div>
+</nav>
+{% endif %}
