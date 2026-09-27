@@ -1,0 +1,10 @@
+{% if upcoming and upcoming.length %}
+<aside class="coming" data-coming aria-labelledby="coming-title">
+  <h2 id="coming-title">Coming up</h2>
+  <ul>
+    {% for bit in upcoming %}
+    <li{% if bit.unconfirmed %} class="unconfirmed"{% endif %}{% if bit.until %} data-until="{{ bit.until }}"{% endif %}>{{ bit.html | safe }}</li>
+    {% endfor %}
+  </ul>
+</aside>
+{% endif %}

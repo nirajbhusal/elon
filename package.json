@@ -3,15 +3,22 @@
   "private": true,
   "description": "Daily public digest of Elon Musk, published as a static site.",
   "scripts": {
-    "build": "eleventy",
+    "build": "node scripts/images.js && eleventy",
     "check": "node scripts/check.js",
-    "start": "eleventy --serve --port=8080"
+    "axe": "node scripts/axe.js",
+    "start": "node scripts/images.js && eleventy --serve --port=8080"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
     "@11ty/eleventy": "^3.1.0",
-    "markdown-it": "^14.1.0"
+    "markdown-it": "^14.1.0",
+    "opentype.js": "^0.4.11",
+    "pureimage": "^0.4.20"
+  },
+  "devDependencies": {
+    "axe-core": "^4.13.0",
+    "puppeteer": "^25.12.0"
   }
 }

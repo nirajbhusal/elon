@@ -21,18 +21,9 @@ isHome: true
     {% if latest.data.summary %}<p class="lede">{{ latest.data.summary }}</p>{% endif %}
   </header>
   {% set upcoming = latest.inputPath | comingUp %}
-  {% if upcoming.length %}
-  <aside class="coming" aria-labelledby="coming-title">
-    <h2 id="coming-title">Coming up</h2>
-    <ul>
-      {% for bit in upcoming %}
-      <li>{{ bit | safe }}</li>
-      {% endfor %}
-    </ul>
-  </aside>
-  {% endif %}
+  {% include "coming.njk" %}
   <div class="prose">
-    {{ latest.templateContent | safe }}
+    {{ latest.templateContent | pageBody | safe }}
   </div>
   <p class="permalink"><a href="{{ latest.url | url }}">Open the {{ latest.date | digestDateShort }} digest</a></p>
 </article>

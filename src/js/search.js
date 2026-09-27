@@ -1,14 +1,11 @@
-(function () {
-  var form = document.getElementById("search-form");
-  if (!form) return;
-
-  var input = document.getElementById("q");
-  var status = document.getElementById("search-status");
-  var results = document.getElementById("search-results");
-  var indexUrl = form.getAttribute("data-index");
-
-  function esc(value) {
-    return String(value)
+(function (root, factory) {
+  var api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  root.ElonSearch = api;
+  if (typeof document !== "undefined") boot(api);
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  function escapeHtml(value) {
+    return String(value == null ? "" : value)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
@@ -17,45 +14,151 @@
   }
 
   function escapeRegExp(value) {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  function highlight(value, query) {
-    if (!query) return esc(value);
-    var re = new RegExp(escapeRegExp(query), "ig");
-    var out = "";
-    var last = 0;
-    var match;
-    while ((match = re.exec(value))) {
-      out += esc(value.slice(last, match.index));
-      out += "<mark>" + esc(match[0]) + "</mark>";
-      last = match.index + match[0].length;
-      if (match[0].length === 0) break;
-    }
-    return out + esc(value.slice(last));
+  function terms(query) {
+    return String(query || "")
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean);
   }
 
-  function snippet(text, query) {
-    var hay = text.toLowerCase();
-    var needle = query.toLowerCase();
-    var at = hay.indexOf(needle);
-    if (at < 0) return "";
-    var start = Math.max(0, at - 70);
-    var end = Math.min(text.length, at + needle.length + 110);
-    var slice = text.slice(start, end).trim();
+  function fields(item) {
+    return [
+      item && item.title,
+      item && item.summary,
+      item && item.covers,
+      item && item.text,
+    ].map(function (value) {
+      return String(value || "");
+    });
+  }
+
+  function matches(item, list) {
+    if (!list.length) return true;
+    var hay = fields(item).join("\n").toLowerCase();
+    return list.every(function (term) {
+      return hay.indexOf(term) !== -1;
+    });
+  }
+
+  function firstHit(text, list) {
+    var lower = text.toLowerCase();
+    var at = -1;
+    var len = 0;
+    list.forEach(function (term) {
+      var found = lower.indexOf(term);
+      if (found !== -1 && (at === -1 || found < at)) {
+        at = found;
+        len = term.length;
+      }
+    });
+    return { at: at, len: len };
+  }
+
+  function windowText(text, at, len) {
+    var start = Math.max(0, at - 80);
+    var end = Math.min(text.length, at + len + 120);
+    var slice = text.slice(start, end).replace(/\s+/g, " ").trim();
     if (start > 0) slice = "…" + slice;
     if (end < text.length) slice += "…";
     return slice;
   }
 
-  function score(item, query) {
-    var q = query.toLowerCase();
-    if (item.title.toLowerCase().includes(q)) return 0;
-    if (item.summary.toLowerCase().includes(q)) return 1;
-    if ((item.covers || "").toLowerCase().includes(q)) return 2;
-    if ((item.text || "").toLowerCase().includes(q)) return 3;
-    return 99;
+  function snippets(item, list) {
+    if (!list.length) return [];
+    var found = [];
+    var covered = {};
+    fields(item).forEach(function (value) {
+      if (found.length >= 2) return;
+      var missing = list.filter(function (term) {
+        return !covered[term];
+      });
+      if (!missing.length) return;
+      var hit = firstHit(value, found.length ? missing : list);
+      if (hit.at < 0) return;
+      var snippet = windowText(value, hit.at, hit.len);
+      found.push(snippet);
+      var lower = snippet.toLowerCase();
+      list.forEach(function (term) {
+        if (lower.indexOf(term) !== -1) covered[term] = true;
+      });
+    });
+    return found;
   }
+
+  function highlight(value, list) {
+    var source = String(value == null ? "" : value);
+    if (!list || !list.length) return escapeHtml(source);
+    var re = new RegExp(list.map(escapeRegExp).join("|"), "ig");
+    var out = "";
+    var last = 0;
+    var match;
+    while ((match = re.exec(source))) {
+      out += escapeHtml(source.slice(last, match.index));
+      out += "<mark>" + escapeHtml(match[0]) + "</mark>";
+      last = match.index + match[0].length;
+      if (match[0].length === 0) break;
+    }
+    return out + escapeHtml(source.slice(last));
+  }
+
+  function renderItems(index, query) {
+    var list = terms(query);
+    var ranked = [];
+    (index || []).forEach(function (item, i) {
+      if (matches(item, list)) ranked.push({ item: item, i: i });
+    });
+    if (!ranked.length) return "";
+    var html = '<ol class="archive-list search-results">';
+    ranked.forEach(function (entry) {
+      var item = entry.item;
+      var extra = snippets(item, list)
+        .map(function (snippet) {
+          return '<p class="snippet">' + highlight(snippet, list) + "</p>";
+        })
+        .join("");
+      html +=
+        '<li class="archive-item">' +
+        '<time datetime="' +
+        escapeHtml(item.date) +
+        '">' +
+        highlight(item.dateLabel || item.date, list) +
+        "</time>" +
+        '<h2><a href="' +
+        escapeHtml(item.url) +
+        '">' +
+        highlight(item.title, list) +
+        "</a></h2>" +
+        "<p>" +
+        highlight(item.summary || "", list) +
+        "</p>" +
+        extra +
+        "</li>";
+    });
+    html += "</ol>";
+    return html;
+  }
+
+  return {
+    terms: terms,
+    matches: matches,
+    snippets: snippets,
+    highlight: highlight,
+    renderItems: renderItems,
+  };
+});
+
+function boot(api) {
+  var form = document.getElementById("search-form");
+  if (!form) return;
+
+  var input = document.getElementById("q");
+  var status = document.getElementById("search-status");
+  var results = document.getElementById("search-results");
+  var indexUrl = form.getAttribute("data-index");
 
   function countLabel(count, filtering) {
     if (filtering) {
@@ -66,37 +169,10 @@
   }
 
   function render(index, query) {
-    var q = query.trim();
-    var ranked = index.map(function (item, i) {
-      return { item: item, i: i, score: q ? score(item, q) : 0 };
-    });
-    if (q) ranked = ranked.filter(function (entry) { return entry.score < 99; });
-    ranked.sort(function (a, b) { return a.score - b.score || a.i - b.i; });
-
-    status.textContent = countLabel(ranked.length, Boolean(q));
-
-    if (!ranked.length) {
-      results.innerHTML = "";
-      return;
-    }
-
-    var html = '<ol class="archive-list search-results">';
-    ranked.forEach(function (entry) {
-      var item = entry.item;
-      var extra = "";
-      if (q && entry.score === 3) {
-        var snip = snippet(item.text || "", q);
-        if (snip) extra = '<p class="snippet">' + highlight(snip, q) + "</p>";
-      }
-      html +=
-        '<li class="archive-item">' +
-        '<time datetime="' + esc(item.date) + '">' + highlight(item.dateLabel || item.date, q) + "</time>" +
-        "<h2><a href=\"" + esc(item.url) + "\">" + highlight(item.title, q) + "</a></h2>" +
-        "<p>" + highlight(item.summary || "", q) + "</p>" +
-        extra +
-        "</li>";
-    });
-    html += "</ol>";
+    var list = api.terms(query);
+    var html = api.renderItems(index, query);
+    var count = html ? (html.match(/<li class="archive-item">/g) || []).length : 0;
+    status.textContent = countLabel(count, list.length > 0);
     results.innerHTML = html;
   }
 
@@ -138,4 +214,4 @@
     .catch(function () {
       status.textContent = "Search index could not be loaded.";
     });
-})();
+}

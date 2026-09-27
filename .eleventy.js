@@ -1,8 +1,9 @@
 const fs = require("fs");
 const path = require("path");
 const site = require("./src/_data/site");
-const { markdown, comingUpFromFile } = require("./lib/content");
-const { isoDate, longDate, shortDate, rfc822 } = require("./lib/dates");
+const { markdown } = require("./lib/content");
+const { comingUpFromFile, pageBody } = require("./lib/coming");
+const { isoDate, longDate, shortDate } = require("./lib/dates");
 
 module.exports = function (eleventyConfig) {
   eleventyConfig.on("eleventy.before", () => {
@@ -15,6 +16,9 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "src/css": "css" });
   eleventyConfig.addPassthroughCopy({ "src/js": "js" });
   eleventyConfig.addPassthroughCopy({ "src/favicon.svg": "favicon.svg" });
+  eleventyConfig.addPassthroughCopy({ "generated/og.png": "og.png" });
+  eleventyConfig.addPassthroughCopy({ "generated/og": "og" });
+  eleventyConfig.addPassthroughCopy({ "generated/favicon.ico": "favicon.ico" });
 
   eleventyConfig.ignores.add("README.md");
   eleventyConfig.ignores.add("**/README.md");
@@ -22,8 +26,8 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addFilter("isoDate", isoDate);
   eleventyConfig.addFilter("digestDate", longDate);
   eleventyConfig.addFilter("digestDateShort", shortDate);
-  eleventyConfig.addFilter("rfc822", rfc822);
   eleventyConfig.addFilter("comingUp", comingUpFromFile);
+  eleventyConfig.addFilter("pageBody", pageBody);
 
   eleventyConfig.addFilter("digestNav", (collection, url) => {
     if (!Array.isArray(collection)) return { older: null, newer: null };
