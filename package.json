@@ -1,0 +1,17 @@
+{
+  "name": "elon",
+  "private": true,
+  "description": "Daily public digest of Elon Musk, published as a static site.",
+  "scripts": {
+    "build": "eleventy",
+    "check": "node scripts/check.js",
+    "start": "eleventy --serve --port=8080"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@11ty/eleventy": "^3.1.0",
+    "markdown-it": "^14.1.0"
+  }
+}

@@ -1,0 +1,9 @@
+<li class="archive-item">
+  <time datetime="{{ item.date | isoDate }}">{{ item.date | digestDateShort }}</time>
+  {% if heading == "h2" %}
+  <h2><a class="archive-title" href="{{ item.url | url }}">{{ item.data.title }}</a></h2>
+  {% else %}
+  <h3><a class="archive-title" href="{{ item.url | url }}">{{ item.data.title }}</a></h3>
+  {% endif %}
+  <p>{{ item.data.summary }}</p>
+</li>
