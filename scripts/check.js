@@ -216,7 +216,7 @@ assert(!/fonts\.googleapis|fonts\.gstatic|googletagmanager|google-analytics|cdn\
 const homeAside = (home.match(/<aside class="coming"[\s\S]*?<\/aside>/) || [""])[0];
 assert(homeAside, "home Coming up panel missing");
 assert(!/state dinner/i.test(homeAside), "Coming up panel still includes the state dinner");
-assert(homeAside.includes("Starship Flight 14"), "Coming up panel is missing Starship");
+assert(homeAside.includes("Roadster"), "Coming up panel is missing Roadster");
 assert(/class="unconfirmed"/.test(homeAside), "unconfirmed items are not marked");
 
 assert(searchPage.includes('data-index="/elon/search-index.json"'), "search index path");
