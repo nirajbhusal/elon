@@ -111,7 +111,7 @@ async function main() {
     if (defaultTheme !== "dark") failures.push(`default theme is ${defaultTheme}`);
     const panel = await page.$eval(".coming", (el) => el.innerText);
     if (/state dinner/i.test(panel)) failures.push("Coming up panel includes the state dinner");
-    if (!panel.includes("Starship Flight 14")) failures.push("Coming up panel is missing Starship");
+    if (!panel.includes("Roadster")) failures.push("Coming up panel is missing Roadster");
     const hidden = await page.evaluate(() => {
       const item = document.createElement("li");
       item.setAttribute("data-until", "2000-01-01T00:00:00.000Z");
